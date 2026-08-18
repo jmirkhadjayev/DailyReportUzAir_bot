@@ -14,7 +14,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand, BotCommandScopeChat, BotCommandScopeDefault
 from aiohttp import web
 import database as db
-from config import ADMIN_IDS, BOT_TOKEN, ORG_NAME, TIMEZONE_NAME
+import roster
+from config import ADMIN_IDS, BOT_TOKEN, DB_PATH, ORG_NAME, STAFF_FILE, TIMEZONE_NAME
 from handlers import setup_routers
 from middlewares import LanguageMiddleware
 from scheduler import setup_scheduler
@@ -114,6 +115,15 @@ async def main() -> None:
 
     db.init_db()
     log.info("Tashkilot: %s | Vaqt mintaqasi: %s", ORG_NAME, TIMEZONE_NAME)
+    log.info("Baza: %s", DB_PATH)
+    if roster.STAFF:
+        log.info("Shtat ro'yxati: %s ta hodim (%s)", len(roster.STAFF), STAFF_FILE)
+    else:
+        log.error(
+            "Shtat ro'yxati bo'sh (%s) — hech kim ro'yxatdan o'ta olmaydi! "
+            "staff.json ni joylashtiring yoki STAFF_FILE ni ko'rsating.",
+            STAFF_FILE,
+        )
 
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dispatcher = Dispatcher(storage=MemoryStorage())
