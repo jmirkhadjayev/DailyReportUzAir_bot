@@ -18,3 +18,8 @@ class ReportForm(StatesGroup):
 
 class ExportForm(StatesGroup):
     custom_period = State()
+
+
+class BroadcastForm(StatesGroup):
+    text = State()
+    confirm = State()

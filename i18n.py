@@ -31,6 +31,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "btn_word": {"uz": "📥 Word (.docx)", "ru": "📥 Word (.docx)"},
     "btn_employees": {"uz": "👥 Hodimlar", "ru": "👥 Сотрудники"},
     "btn_stats": {"uz": "📈 Statistika", "ru": "📈 Статистика"},
+    "btn_broadcast": {"uz": "📢 Xabar yuborish", "ru": "📢 Рассылка"},
     "btn_skip": {"uz": "⏭ O'tkazib yuborish", "ru": "⏭ Пропустить"},
     "btn_cancel": {"uz": "❌ Bekor qilish", "ru": "❌ Отмена"},
 
@@ -387,6 +388,39 @@ TEXTS: dict[str, dict[str, str]] = {
     "toast_not_found": {"uz": "Topilmadi", "ru": "Не найдено"},
     "cancelled_short": {"uz": "❌ Bekor qilindi.", "ru": "❌ Отменено."},
 
+    # ------------------------------------------------------------ xabar tarqatish
+    "broadcast_ask": {
+        "uz": "📢 <b>Hodimlarga yubormoqchi bo'lgan xabaringizni yozing.</b>\n\n"
+              "Qabul qiluvchilar: <b>{count}</b> ta faol hodim.\n"
+              "<i>Matn o'zgartirilmasdan, xuddi yozganingizdek yuboriladi.</i>",
+        "ru": "📢 <b>Напишите сообщение для сотрудников.</b>\n\n"
+              "Получателей: <b>{count}</b> активных сотрудников.\n"
+              "<i>Текст уйдёт ровно в том виде, в каком вы его напишете.</i>",
+    },
+    "broadcast_no_employees": {
+        "uz": "📭 Faol hodim yo'q — xabar yuborishga hech kim qolmadi.",
+        "ru": "📭 Активных сотрудников нет — рассылать некому.",
+    },
+    "broadcast_preview": {
+        "uz": "📢 <b>Xabar matni:</b>\n\n{text}\n\n<b>{count}</b> ta hodimga yuborilsinmi?",
+        "ru": "📢 <b>Текст сообщения:</b>\n\n{text}\n\nОтправить <b>{count}</b> сотрудникам?",
+    },
+    "btn_broadcast_send": {"uz": "✅ Yuborish", "ru": "✅ Отправить"},
+    "broadcast_sending": {
+        "uz": "⏳ Yuborilmoqda… ({count} ta manzil)",
+        "ru": "⏳ Отправляется… ({count} адресатов)",
+    },
+    "broadcast_result": {
+        "uz": "📢 <b>Yakun</b>\n\n✅ Yetkazildi: <b>{ok}</b> ta\n❌ Yetmadi: <b>{fail}</b> ta",
+        "ru": "📢 <b>Итог</b>\n\n✅ Доставлено: <b>{ok}</b>\n❌ Не доставлено: <b>{fail}</b>",
+    },
+    "broadcast_failed_list": {
+        "uz": "\n\n<b>Yetib bormaganlar:</b>\n{list}\n\n"
+              "<i>Odatda sababi: hodim botga hali /start bosmagan yoki botni bloklagan.</i>",
+        "ru": "\n\n<b>Не доставлено:</b>\n{list}\n\n"
+              "<i>Обычная причина: сотрудник ещё не нажал /start или заблокировал бота.</i>",
+    },
+
     # ------------------------------------------------------------ eslatmalar
     "reminder": {
         "uz": "⏰ <b>Eslatma</b>\n\nBugungi ({date}) kundalik hisobotingiz hali topshirilmagan.\n"
@@ -428,16 +462,20 @@ TEXTS: dict[str, dict[str, str]] = {
         "uz": "<b>ℹ️ Boshqaruv paneli</b>\n\n"
               "<b>{today}</b> — bugungi hisobotlar.\n<b>{missing}</b> — topshirmagan hodimlar.\n"
               "<b>{excel}</b> / <b>{word}</b> — tanlangan davr hisobotlarini fayl qilib olish.\n"
-              "<b>{employees}</b> — hodimlar, faollashtirish/o'chirish.\n"
-              "<b>{stats}</b> — joriy oy ko'rsatkichlari.\n<b>{lang}</b> — tilni o'zgartirish.\n\n"
+              "<b>{employees}</b> — hodimlar, ularning shaxsiy hisoboti, faollashtirish/o'chirish.\n"
+              "<b>{stats}</b> — joriy oy ko'rsatkichlari.\n"
+              "<b>{broadcast}</b> — barcha hodimlarga xabar tarqatish.\n"
+              "<b>{lang}</b> — tilni o'zgartirish.\n\n"
               "Hodim botga /start bosib, tabel raqamini kiritsa — F.I.Sh. va lavozimi "
               "avtomatik biriktiriladi va sizga xabar keladi.\n\n"
               "Buyruqlar: /start /excel /word /hodimlar /help",
         "ru": "<b>ℹ️ Панель руководителя</b>\n\n"
               "<b>{today}</b> — отчёты за сегодня.\n<b>{missing}</b> — кто не сдал.\n"
               "<b>{excel}</b> / <b>{word}</b> — выгрузка отчётов за период в файл.\n"
-              "<b>{employees}</b> — сотрудники, включение/удаление.\n"
-              "<b>{stats}</b> — показатели за текущий месяц.\n<b>{lang}</b> — сменить язык.\n\n"
+              "<b>{employees}</b> — сотрудники, их личные отчёты, включение/удаление.\n"
+              "<b>{stats}</b> — показатели за текущий месяц.\n"
+              "<b>{broadcast}</b> — рассылка сообщения всем сотрудникам.\n"
+              "<b>{lang}</b> — сменить язык.\n\n"
               "Сотрудник нажимает /start, вводит табельный номер — Ф.И.О. и должность "
               "подставляются автоматически, а вам приходит уведомление.\n\n"
               "Команды: /start /excel /word /hodimlar /help",
@@ -485,8 +523,12 @@ TEXTS: dict[str, dict[str, str]] = {
 }
 
 
-def t(lang: str | None, key: str, **kwargs) -> str:
-    """Kalit bo'yicha matnni tanlangan tilda qaytaradi."""
+def t(lang: str | None, key: str, /, **kwargs) -> str:
+    """Kalit bo'yicha matnni tanlangan tilda qaytaradi.
+
+    `lang` va `key` — faqat pozitsion argumentlar, shu sababli matn ichida
+    {lang} yoki {key} nomli o'rin egallovchilar ham bemalol ishlatilaveradi.
+    """
     entry = TEXTS.get(key)
     if entry is None:
         return key

@@ -5,6 +5,7 @@ import asyncio
 from datetime import date
 
 from aiogram import F, Router
+from aiogram.exceptions import TelegramAPIError, TelegramRetryAfter
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
@@ -16,7 +17,7 @@ from config import ORG_NAME
 from exporters import build_excel, build_word
 from filters import Btn, IsAdmin
 from i18n import t
-from states import ExportForm
+from states import BroadcastForm, ExportForm
 from utils import (
     esc,
     fmt_date,
@@ -280,6 +281,91 @@ async def _send_export(
         caption=caption,
         reply_markup=kb.admin_menu(lang),
     )
+
+
+# ------------------------------------------------------------------ xabar tarqatish
+
+BROADCAST_LIMIT = 4000
+SEND_PAUSE = 0.05   # Telegram cheklovi (~30 xabar/sek) ga tegib ketmaslik uchun
+
+
+@router.message(Btn("btn_broadcast"))
+async def broadcast_start(message: Message, state: FSMContext, lang: str) -> None:
+    await state.clear()
+    employees = db.list_employees(active_only=True)
+    if not employees:
+        await message.answer(t(lang, "broadcast_no_employees"), reply_markup=kb.admin_menu(lang))
+        return
+    await state.set_state(BroadcastForm.text)
+    await message.answer(
+        t(lang, "broadcast_ask", count=len(employees)), reply_markup=kb.cancel_kb(lang)
+    )
+
+
+@router.message(BroadcastForm.text, F.text)
+async def broadcast_preview(message: Message, state: FSMContext, lang: str) -> None:
+    text = message.text.strip()[:BROADCAST_LIMIT]
+    count = len(db.list_employees(active_only=True))
+    await state.update_data(text=text)
+    await state.set_state(BroadcastForm.confirm)
+    await message.answer(
+        t(lang, "broadcast_preview", text=esc(text), count=count),
+        reply_markup=kb.broadcast_confirm_kb(lang),
+    )
+
+
+@router.callback_query(BroadcastForm.confirm, F.data.startswith("bc:"))
+async def broadcast_send(call: CallbackQuery, state: FSMContext, lang: str) -> None:
+    if call.data.endswith("cancel"):
+        await state.clear()
+        await call.message.edit_text(t(lang, "cancelled_short"))
+        await call.message.answer(t(lang, "menu"), reply_markup=kb.admin_menu(lang))
+        await call.answer()
+        return
+
+    data = await state.get_data()
+    await state.clear()
+    text = data.get("text", "")
+    employees = db.list_employees(active_only=True)
+
+    await call.message.edit_text(t(lang, "broadcast_sending", count=len(employees)))
+    await call.answer()
+
+    delivered, failed = await _deliver(call.bot, employees, text)
+
+    result = t(lang, "broadcast_result", ok=delivered, fail=len(failed))
+    if failed:
+        result += t(
+            lang,
+            "broadcast_failed_list",
+            list="\n".join(f"• {esc(name)} — <i>{esc(reason)}</i>" for name, reason in failed),
+        )
+    await send_long(call.message, result, reply_markup=kb.admin_menu(lang))
+
+
+async def _deliver(bot, employees, text: str) -> tuple[int, list[tuple[str, str]]]:
+    """Xabarni hodimlarga yuboradi. (yetkazilgan, [(F.I.Sh., sabab)]) qaytaradi."""
+    delivered = 0
+    failed: list[tuple[str, str]] = []
+
+    for employee in employees:
+        for attempt in (1, 2):
+            try:
+                # parse_mode=None — admin yozgan matn o'zgarishsiz ketadi
+                await bot.send_message(employee["tg_id"], text, parse_mode=None)
+                delivered += 1
+                break
+            except TelegramRetryAfter as exc:
+                if attempt == 1:
+                    await asyncio.sleep(exc.retry_after)
+                    continue
+                failed.append((employee["full_name"], f"flood: {exc.retry_after}s"))
+            except TelegramAPIError as exc:
+                failed.append((employee["full_name"], getattr(exc, "message", str(exc))))
+                break
+        await asyncio.sleep(SEND_PAUSE)
+
+    return delivered, failed
 
 
 # ------------------------------------------------------------------ hodimlar

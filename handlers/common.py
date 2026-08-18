@@ -47,6 +47,7 @@ def help_text(lang: str, admin: bool) -> str:
             word=t(lang, "btn_word"),
             employees=t(lang, "btn_employees"),
             stats=t(lang, "btn_stats"),
+            broadcast=t(lang, "btn_broadcast"),
             lang=t(lang, "btn_lang"),
         )
     return t(

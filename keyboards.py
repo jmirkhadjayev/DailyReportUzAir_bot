@@ -55,6 +55,7 @@ def admin_menu(lang: str) -> ReplyKeyboardMarkup:
                 KeyboardButton(text=t(lang, "btn_employees")),
                 KeyboardButton(text=t(lang, "btn_stats")),
             ],
+            [KeyboardButton(text=t(lang, "btn_broadcast"))],
             [KeyboardButton(text=t(lang, "btn_lang")), KeyboardButton(text=t(lang, "btn_help"))],
         ],
         resize_keyboard=True,
@@ -151,6 +152,15 @@ def period_kb(lang: str, fmt: str, emp_id: int = 0) -> InlineKeyboardMarkup:
             ],
             [InlineKeyboardButton(text=t(lang, "btn_p_custom"), callback_data=cb("custom"))],
             [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="per:cancel:cancel:0")],
+        ]
+    )
+
+
+def broadcast_confirm_kb(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "btn_broadcast_send"), callback_data="bc:send")],
+            [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="bc:cancel")],
         ]
     )
 
