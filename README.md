@@ -162,10 +162,18 @@ Fayl nomi ham alohida bo'ladi: `Hisobot_1234_2026-08-01_2026-08-18.xlsx`
 
 ## ⏰ Avtomatik xabarlar
 
-- **17:00** — hisobot topshirmagan hodimlarga eslatma
-- **18:00** — boshliqqa kunlik xulosa (kim topshirdi, kim yo'q)
+- **08:00 · 12:00 · 16:00 · 20:00** — hisobot topshirmagan hodimlarga eslatma
+  (hisobotini topshirganlar bezovta qilinmaydi)
+- **23:59** — boshliqqa kunlik xulosa (kim topshirdi, kim yo'q)
 
-Vaqtni `.env` dagi `REMINDER_TIME` va `DIGEST_TIME` orqali o'zgartirasiz.
+Jadval `.env` orqali sozlanadi — boshlanish vaqti, oraliq va oxirgi eslatma chegarasi:
+
+```
+REMINDER_START=08:00
+REMINDER_INTERVAL_HOURS=4
+REMINDER_END=20:00
+DIGEST_TIME=23:59
+```
 `WORKDAYS_ONLY=true` bo'lsa, eslatmalar faqat dushanba–juma kunlari yuboriladi.
 
 ---

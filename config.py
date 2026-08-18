@@ -46,10 +46,14 @@ def chief_name(lang: str) -> str:
 TIMEZONE_NAME: str = os.getenv("TIMEZONE", "Asia/Tashkent").strip()
 TZ = ZoneInfo(TIMEZONE_NAME)
 
-# Hodimlarga eslatma yuboriladigan vaqt (HH:MM)
-REMINDER_TIME: str = os.getenv("REMINDER_TIME", "17:00").strip()
+# Hodimlarga eslatma: birinchi eslatma vaqti, oraliq (soat) va oxirgi eslatma chegarasi.
+# Masalan 08:00 dan har 4 soatda 20:00 gacha -> 08:00, 12:00, 16:00, 20:00
+REMINDER_START: str = os.getenv("REMINDER_START", os.getenv("REMINDER_TIME", "08:00")).strip()
+REMINDER_INTERVAL_HOURS: int = int(os.getenv("REMINDER_INTERVAL_HOURS", "4") or 4)
+REMINDER_END: str = os.getenv("REMINDER_END", "20:00").strip()
+
 # Boshliqqa kunlik xulosa yuboriladigan vaqt (HH:MM)
-DIGEST_TIME: str = os.getenv("DIGEST_TIME", "18:00").strip()
+DIGEST_TIME: str = os.getenv("DIGEST_TIME", "23:59").strip()
 # Eslatma faqat ish kunlari yuborilsinmi
 WORKDAYS_ONLY: bool = os.getenv("WORKDAYS_ONLY", "true").strip().lower() in {"1", "true", "yes", "ha"}
 
@@ -71,6 +75,24 @@ def is_admin(tg_id: int) -> bool:
 def parse_hhmm(value: str, default: tuple[int, int]) -> tuple[int, int]:
     try:
         hh, mm = value.split(":")
-        return int(hh), int(mm)
+        hh, mm = int(hh), int(mm)
+        if 0 <= hh <= 23 and 0 <= mm <= 59:
+            return hh, mm
     except Exception:
-        return default
+        pass
+    return default
+
+
+def reminder_times() -> list[tuple[int, int]]:
+    """Eslatma vaqtlari: boshlanish vaqtidan oraliq bilan chegaragacha."""
+    start_h, start_m = parse_hhmm(REMINDER_START, (8, 0))
+    end_h, end_m = parse_hhmm(REMINDER_END, (20, 0))
+    step = REMINDER_INTERVAL_HOURS if REMINDER_INTERVAL_HOURS > 0 else 4
+
+    times: list[tuple[int, int]] = []
+    minute = start_h * 60 + start_m
+    last = end_h * 60 + end_m
+    while minute <= last and len(times) < 24:
+        times.append((minute // 60, minute % 60))
+        minute += step * 60
+    return times or [(8, 0)]

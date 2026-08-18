@@ -9,7 +9,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 import database as db
 import keyboards as kb
-from config import ADMIN_IDS, DIGEST_TIME, REMINDER_TIME, TZ, WORKDAYS_ONLY, parse_hhmm
+from config import ADMIN_IDS, DIGEST_TIME, TZ, WORKDAYS_ONLY, parse_hhmm, reminder_times
 from i18n import DEFAULT_LANG, t
 from utils import esc, fmt_date, iso, today
 
@@ -61,16 +61,17 @@ def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler(timezone=TZ)
     day_of_week = "mon-fri" if WORKDAYS_ONLY else "*"
 
-    rh, rm = parse_hhmm(REMINDER_TIME, (17, 0))
-    dh, dm = parse_hhmm(DIGEST_TIME, (18, 0))
+    times = reminder_times()
+    for index, (hour, minute) in enumerate(times, start=1):
+        scheduler.add_job(
+            send_reminders,
+            CronTrigger(day_of_week=day_of_week, hour=hour, minute=minute, timezone=TZ),
+            args=[bot],
+            id=f"reminder_{index}",
+            replace_existing=True,
+        )
 
-    scheduler.add_job(
-        send_reminders,
-        CronTrigger(day_of_week=day_of_week, hour=rh, minute=rm, timezone=TZ),
-        args=[bot],
-        id="reminders",
-        replace_existing=True,
-    )
+    dh, dm = parse_hhmm(DIGEST_TIME, (23, 59))
     scheduler.add_job(
         send_digest,
         CronTrigger(day_of_week=day_of_week, hour=dh, minute=dm, timezone=TZ),
@@ -78,9 +79,11 @@ def setup_scheduler(bot: Bot) -> AsyncIOScheduler:
         id="digest",
         replace_existing=True,
     )
+
     scheduler.start()
     log.info(
-        "Rejalashtiruvchi ishga tushdi: eslatma %02d:%02d, xulosa %02d:%02d (%s)",
-        rh, rm, dh, dm, day_of_week,
+        "Rejalashtiruvchi: eslatmalar %s | kunlik xulosa %02d:%02d | kunlar: %s",
+        ", ".join(f"{h:02d}:{m:02d}" for h, m in times),
+        dh, dm, day_of_week,
     )
     return scheduler
