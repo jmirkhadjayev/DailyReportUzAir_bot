@@ -142,11 +142,23 @@ qoldirilgan bo'lim tegilmaydi.
 | ⏳ Topshirmaganlar | Hisobot yubormagan hodimlar (username bilan) |
 | 📥 Excel (.xlsx) | Tanlangan davr hisobotlarini jadval ko'rinishida yuklab olish |
 | 📥 Word (.docx) | O'sha ma'lumot rasmiy hujjat ko'rinishida, imzo joyi bilan |
-| 👥 Hodimlar | Ro'yxat, oxirgi hisobotlari, faollashtirish / o'chirish + **botga ulanmaganlar** |
+| 👥 Hodimlar | Ro'yxat, oxirgi hisobotlari, **shaxsiy Excel/Word**, faollashtirish / o'chirish + botga ulanmaganlar |
 | 📈 Statistika | Joriy oyda kim nechta hisobot topshirgani |
 
 **Davr tanlash:** Bugun · Kecha · Shu hafta · Oxirgi 7 kun · Shu oy · Oxirgi 30 kun ·
 yoki qo'lda: `01.08.2026 - 18.08.2026`
+
+### 👤 Bitta hodimning shaxsiy hisoboti
+
+«👥 Hodimlar» → hodimni tanlang → **«📥 Shaxsiy Excel»** yoki **«📥 Shaxsiy Word»** → davr.
+Hujjatga faqat o'sha hodimning yozuvlari tushadi, sarlavha ostida esa uning ma'lumoti
+ko'rsatiladi:
+
+```
+Hodim: FAMILIYA ISM SHARIF — Yetakchi muhandis (tabel №1234)
+```
+
+Fayl nomi ham alohida bo'ladi: `Hisobot_1234_2026-08-01_2026-08-18.xlsx`
 
 ## ⏰ Avtomatik xabarlar
 

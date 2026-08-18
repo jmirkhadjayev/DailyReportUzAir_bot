@@ -127,28 +127,30 @@ def profile_kb(lang: str) -> InlineKeyboardMarkup:
 
 # ------------------------------------------------------------------ boshliq paneli
 
-def period_kb(lang: str, fmt: str) -> InlineKeyboardMarkup:
-    """fmt: excel | word"""
+def period_kb(lang: str, fmt: str, emp_id: int = 0) -> InlineKeyboardMarkup:
+    """fmt: excel | word.  emp_id: 0 — hamma hodim, aks holda bitta hodim."""
+
+    def cb(code: str) -> str:
+        return f"per:{fmt}:{code}:{emp_id}"
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text=t(lang, "btn_p_today"), callback_data=f"per:{fmt}:today"),
+                InlineKeyboardButton(text=t(lang, "btn_p_today"), callback_data=cb("today")),
                 InlineKeyboardButton(
-                    text=t(lang, "btn_p_yesterday"), callback_data=f"per:{fmt}:yesterday"
+                    text=t(lang, "btn_p_yesterday"), callback_data=cb("yesterday")
                 ),
             ],
             [
-                InlineKeyboardButton(text=t(lang, "btn_p_week"), callback_data=f"per:{fmt}:week"),
-                InlineKeyboardButton(text=t(lang, "btn_p_last7"), callback_data=f"per:{fmt}:last7"),
+                InlineKeyboardButton(text=t(lang, "btn_p_week"), callback_data=cb("week")),
+                InlineKeyboardButton(text=t(lang, "btn_p_last7"), callback_data=cb("last7")),
             ],
             [
-                InlineKeyboardButton(text=t(lang, "btn_p_month"), callback_data=f"per:{fmt}:month"),
-                InlineKeyboardButton(
-                    text=t(lang, "btn_p_last30"), callback_data=f"per:{fmt}:last30"
-                ),
+                InlineKeyboardButton(text=t(lang, "btn_p_month"), callback_data=cb("month")),
+                InlineKeyboardButton(text=t(lang, "btn_p_last30"), callback_data=cb("last30")),
             ],
-            [InlineKeyboardButton(text=t(lang, "btn_p_custom"), callback_data=f"per:{fmt}:custom")],
-            [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="per:cancel:cancel")],
+            [InlineKeyboardButton(text=t(lang, "btn_p_custom"), callback_data=cb("custom"))],
+            [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="per:cancel:cancel:0")],
         ]
     )
 
@@ -176,6 +178,14 @@ def employee_card_kb(lang: str, emp_id: int, is_active: bool) -> InlineKeyboardM
                 InlineKeyboardButton(
                     text=t(lang, "btn_emp_reports"), callback_data=f"emp:rep:{emp_id}"
                 )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=t(lang, "btn_emp_excel"), callback_data=f"empx:excel:{emp_id}"
+                ),
+                InlineKeyboardButton(
+                    text=t(lang, "btn_emp_word"), callback_data=f"empx:word:{emp_id}"
+                ),
             ],
             [
                 InlineKeyboardButton(

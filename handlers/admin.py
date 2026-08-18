@@ -25,6 +25,7 @@ from utils import (
     parse_period_input,
     period_title,
     resolve_period,
+    safe_filename,
     shorten,
     today,
 )
@@ -173,9 +174,27 @@ async def ask_period_word(message: Message, state: FSMContext, lang: str) -> Non
     await message.answer(t(lang, "choose_period_word"), reply_markup=kb.period_kb(lang, "word"))
 
 
+@router.callback_query(F.data.startswith("empx:"))
+async def employee_export(call: CallbackQuery, state: FSMContext, lang: str) -> None:
+    """Hodim kartasidan uning shaxsiy hisobotini yuklab olish."""
+    _, fmt, raw_id = call.data.split(":", 2)
+    employee = db.get_employee_by_id(int(raw_id))
+    if employee is None:
+        await call.answer(t(lang, "employee_not_found"), show_alert=True)
+        return
+    await state.clear()
+    await call.message.answer(
+        t(lang, "choose_period_for", name=esc(employee["full_name"])),
+        reply_markup=kb.period_kb(lang, fmt, employee["id"]),
+    )
+    await call.answer()
+
+
 @router.callback_query(F.data.startswith("per:"))
 async def period_chosen(call: CallbackQuery, state: FSMContext, lang: str) -> None:
-    _, fmt, code = call.data.split(":", 2)
+    parts = call.data.split(":")
+    fmt, code = parts[1], parts[2]
+    emp_id = int(parts[3]) if len(parts) > 3 else 0
 
     if code == "cancel":
         await state.clear()
@@ -185,7 +204,7 @@ async def period_chosen(call: CallbackQuery, state: FSMContext, lang: str) -> No
 
     if code == "custom":
         await state.set_state(ExportForm.custom_period)
-        await state.update_data(fmt=fmt)
+        await state.update_data(fmt=fmt, emp_id=emp_id)
         await call.message.edit_text(t(lang, "ask_custom_period"))
         await call.message.answer(t(lang, "enter_date"), reply_markup=kb.cancel_kb(lang))
         await call.answer()
@@ -196,7 +215,7 @@ async def period_chosen(call: CallbackQuery, state: FSMContext, lang: str) -> No
     await call.message.edit_text(
         t(lang, "preparing", period=period_title(date_from, date_to, lang))
     )
-    await _send_export(call.message, fmt, date_from, date_to, lang)
+    await _send_export(call.message, fmt, date_from, date_to, lang, emp_id)
 
 
 @router.message(ExportForm.custom_period, F.text)
@@ -209,13 +228,16 @@ async def custom_period(message: Message, state: FSMContext, lang: str) -> None:
     await state.clear()
     date_from, date_to = period
     await message.answer(t(lang, "preparing", period=period_title(date_from, date_to, lang)))
-    await _send_export(message, data.get("fmt", "excel"), date_from, date_to, lang)
+    await _send_export(
+        message, data.get("fmt", "excel"), date_from, date_to, lang, data.get("emp_id", 0)
+    )
 
 
 async def _send_export(
-    message: Message, fmt: str, date_from: date, date_to: date, lang: str
+    message: Message, fmt: str, date_from: date, date_to: date, lang: str, emp_id: int = 0
 ) -> None:
-    rows = db.get_reports(iso(date_from), iso(date_to))
+    employee = db.get_employee_by_id(emp_id) if emp_id else None
+    rows = db.get_reports(iso(date_from), iso(date_to), employee_id=emp_id or None)
 
     if not rows:
         await message.answer(
@@ -224,24 +246,38 @@ async def _send_export(
         )
         return
 
+    subject = ""
+    name_part = ""
+    if employee is not None:
+        subject = t(
+            lang,
+            "doc_subject",
+            name=employee["full_name"],
+            position=employee["position"] or "—",
+            tabel=employee["tabel"] or "—",
+        )
+        name_part = f"{safe_filename(employee['tabel'] or employee['full_name'])}_"
+
     suffix = iso(date_from) if date_from == date_to else f"{iso(date_from)}_{iso(date_to)}"
-    if fmt == "word":
-        content = await asyncio.to_thread(build_word, rows, date_from, date_to, lang)
-        filename = f"Hisobot_{suffix}.docx"
-    else:
-        content = await asyncio.to_thread(build_excel, rows, date_from, date_to, lang)
-        filename = f"Hisobot_{suffix}.xlsx"
+    builder = build_word if fmt == "word" else build_excel
+    extension = "docx" if fmt == "word" else "xlsx"
+    content = await asyncio.to_thread(builder, rows, date_from, date_to, lang, subject)
+    filename = f"Hisobot_{name_part}{suffix}.{extension}"
+
+    caption = t(
+        lang,
+        "doc_caption",
+        org=esc(ORG_NAME),
+        period=period_title(date_from, date_to, lang),
+        count=len(rows),
+        employees=len({r["employee_id"] for r in rows}),
+    )
+    if employee is not None:
+        caption = f"👤 <b>{esc(employee['full_name'])}</b>\n{caption}"
 
     await message.answer_document(
         BufferedInputFile(content, filename=filename),
-        caption=t(
-            lang,
-            "doc_caption",
-            org=esc(ORG_NAME),
-            period=period_title(date_from, date_to, lang),
-            count=len(rows),
-            employees=len({r["employee_id"] for r in rows}),
-        ),
+        caption=caption,
         reply_markup=kb.admin_menu(lang),
     )
 

@@ -75,7 +75,9 @@ def _estimate_height(row, widths: list[int]) -> int:
     return min(15 * min(lines, 20) + 4, 300)
 
 
-def build_excel(rows, date_from: date, date_to: date, lang: str = "uz") -> bytes:
+def build_excel(
+    rows, date_from: date, date_to: date, lang: str = "uz", subject: str = ""
+) -> bytes:
     headers = [(t(lang, key), width) for key, width in COLUMN_KEYS]
 
     wb = Workbook()
@@ -101,18 +103,26 @@ def build_excel(rows, date_from: date, date_to: date, lang: str = "uz") -> bytes
     ws.cell(row=2, column=1).font = Font(bold=True, size=11)
     ws.cell(row=2, column=1).alignment = Alignment(horizontal="center")
 
-    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=last_col)
+    row = 3
+    if subject:
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=last_col)
+        cell = ws.cell(row=row, column=1, value=subject)
+        cell.font = Font(bold=True, size=11, color="1F4E78")
+        cell.alignment = Alignment(horizontal="center")
+        row += 1
+
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=last_col)
     ws.cell(
-        row=3,
+        row=row,
         column=1,
         value=f"{t(lang, 'doc_generated')}: {now_str()}  |  "
         f"{t(lang, 'doc_total')}: {len(rows)}",
     )
-    ws.cell(row=3, column=1).font = Font(size=9, italic=True, color="666666")
-    ws.cell(row=3, column=1).alignment = Alignment(horizontal="center")
+    ws.cell(row=row, column=1).font = Font(size=9, italic=True, color="666666")
+    ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
 
     # --- jadval sarlavhasi
-    header_row = 5
+    header_row = row + 2
     for col, (title, width) in enumerate(headers, start=1):
         cell = ws.cell(row=header_row, column=col, value=title)
         cell.font = HEADER_FONT

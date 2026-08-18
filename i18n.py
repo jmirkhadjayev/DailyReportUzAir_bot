@@ -361,6 +361,16 @@ TEXTS: dict[str, dict[str, str]] = {
     "no_reports_yet": {"uz": "\n📭 Hali hisobot topshirmagan.", "ru": "\n📭 Отчётов пока нет."},
     "employee_not_found": {"uz": "Hodim topilmadi.", "ru": "Сотрудник не найден."},
     "btn_emp_reports": {"uz": "📋 Oxirgi hisobotlari", "ru": "📋 Последние отчёты"},
+    "btn_emp_excel": {"uz": "📥 Shaxsiy Excel", "ru": "📥 Личный Excel"},
+    "btn_emp_word": {"uz": "📥 Shaxsiy Word", "ru": "📥 Личный Word"},
+    "choose_period_for": {
+        "uz": "📥 <b>{name}</b> uchun davrni tanlang:",
+        "ru": "📥 Выберите период для <b>{name}</b>:",
+    },
+    "doc_subject": {
+        "uz": "Hodim: {name} — {position} (tabel №{tabel})",
+        "ru": "Сотрудник: {name} — {position} (таб. №{tabel})",
+    },
     "btn_emp_off": {"uz": "🚫 Faolsizlantirish", "ru": "🚫 Отключить"},
     "btn_emp_on": {"uz": "✅ Faollashtirish", "ru": "✅ Включить"},
     "btn_emp_del": {"uz": "🗑 O'chirish", "ru": "🗑 Удалить"},

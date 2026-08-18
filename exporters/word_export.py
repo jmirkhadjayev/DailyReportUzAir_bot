@@ -77,7 +77,9 @@ def _setup(document: Document) -> None:
     run.font.color.rgb = RGBColor(0x88, 0x88, 0x88)
 
 
-def build_word(rows, date_from: date, date_to: date, lang: str = "uz") -> bytes:
+def build_word(
+    rows, date_from: date, date_to: date, lang: str = "uz", subject: str = ""
+) -> bytes:
     document = Document()
     _setup(document)
     columns = [t(lang, key) for key in COLUMN_KEYS]
@@ -94,6 +96,14 @@ def build_word(rows, date_from: date, date_to: date, lang: str = "uz") -> bytes:
     run = subtitle.add_run(t(lang, "doc_title"))
     run.bold = True
     run.font.size = Pt(13)
+
+    if subject:
+        line = document.add_paragraph()
+        line.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = line.add_run(subject)
+        run.bold = True
+        run.font.size = Pt(11)
+        run.font.color.rgb = ACCENT
 
     info = document.add_paragraph()
     info.alignment = WD_ALIGN_PARAGRAPH.CENTER
