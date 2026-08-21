@@ -31,6 +31,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "btn_word": {"uz": "📥 Word (.docx)", "ru": "📥 Word (.docx)"},
     "btn_employees": {"uz": "👥 Hodimlar", "ru": "👥 Сотрудники"},
     "btn_stats": {"uz": "📈 Statistika", "ru": "📈 Статистика"},
+    "btn_shifts": {"uz": "📅 Smena grafigi", "ru": "📅 График смен"},
     "btn_broadcast": {"uz": "📢 Xabar yuborish", "ru": "📢 Рассылка"},
     "btn_skip": {"uz": "⏭ O'tkazib yuborish", "ru": "⏭ Пропустить"},
     "btn_cancel": {"uz": "❌ Bekor qilish", "ru": "❌ Отмена"},
@@ -249,10 +250,12 @@ TEXTS: dict[str, dict[str, str]] = {
     "no_reports": {"uz": "📭 Sizda hali hisobot yo'q.", "ru": "📭 У вас пока нет отчётов."},
     "profile": {
         "uz": "👤 <b>Profilingiz</b>\n\nF.I.Sh.: <b>{name}</b>\n💼 Lavozim: {position}\n"
-              "🔢 Tabel №: {tabel}\n📊 Jami hisobotlar: <b>{total}</b> ta\n"
+              "🔢 Tabel №: {tabel}\n⏰ Ish grafigi: <b>{schedule}</b>\n"
+              "📊 Jami hisobotlar: <b>{total}</b> ta\n"
               "🗓 Bugungi hisobot: {today_status}",
         "ru": "👤 <b>Ваш профиль</b>\n\nФ.И.О.: <b>{name}</b>\n💼 Должность: {position}\n"
-              "🔢 Таб. №: {tabel}\n📊 Всего отчётов: <b>{total}</b>\n"
+              "🔢 Таб. №: {tabel}\n⏰ График работы: <b>{schedule}</b>\n"
+              "📊 Всего отчётов: <b>{total}</b>\n"
               "🗓 Отчёт за сегодня: {today_status}",
     },
     "status_done": {"uz": "✅ topshirilgan", "ru": "✅ сдан"},

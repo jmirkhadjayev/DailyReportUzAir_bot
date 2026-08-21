@@ -10,6 +10,7 @@ from aiogram.types import CallbackQuery, Message
 
 import database as db
 import keyboards as kb
+import shifts
 from config import is_admin
 from filters import Btn
 from flows import FIELD_LIMIT, MAX_PAST_DAYS, ask_done, begin_report
@@ -283,6 +284,7 @@ async def profile(message: Message, lang: str) -> None:
             name=esc(employee["full_name"]),
             position=esc(employee["position"]) or "—",
             tabel=esc(employee["tabel"]) or "—",
+            schedule=shifts.get_schedule_badge(employee["tabel"], today(), lang),
             total=total,
             today_status=t(lang, "status_done" if has_today else "status_not_done"),
         ),

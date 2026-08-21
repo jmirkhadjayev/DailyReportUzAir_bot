@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date
+from datetime import date, timedelta
 
 from aiogram import F, Router
 from aiogram.exceptions import TelegramAPIError, TelegramRetryAfter
@@ -13,6 +13,7 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 import database as db
 import keyboards as kb
 import roster
+import shifts
 from config import ORG_NAME
 from exporters import build_excel, build_word
 from filters import Btn, IsAdmin
@@ -86,14 +87,15 @@ def _reports_text(lang: str, rows, date_from: date, date_to: date) -> str:
 async def today_reports(message: Message, lang: str) -> None:
     day = today()
     rows = db.get_reports(iso(day), iso(day))
-    missing = db.employees_without_report(iso(day))
+    all_missing = db.employees_without_report(iso(day))
+    missing = [m for m in all_missing if shifts.is_on_duty(m["tabel"], day, check_time=None)]
     text = _reports_text(lang, rows, day, day)
     if missing:
         text += t(
             lang,
             "missing_block",
             count=len(missing),
-            list="\n".join(f"• {esc(m['full_name'])}" for m in missing),
+            list="\n".join(f"• {esc(m['full_name'])} ({shifts.get_schedule_badge(m['tabel'], day, lang)})" for m in missing),
         )
     await send_long(message, text, reply_markup=kb.admin_menu(lang))
 
@@ -101,15 +103,17 @@ async def today_reports(message: Message, lang: str) -> None:
 @router.message(Btn("btn_missing"))
 async def missing_today(message: Message, lang: str) -> None:
     day = today()
-    missing = db.employees_without_report(iso(day))
-    total = len(db.list_employees())
+    all_missing = db.employees_without_report(iso(day))
+    missing = [m for m in all_missing if shifts.is_on_duty(m["tabel"], day, check_time=None)]
+    expected = [e for e in db.list_employees() if shifts.is_on_duty(e["tabel"], day, check_time=None)]
+    total = len(expected) or len(db.list_employees())
     if not missing:
         await message.answer(
             t(lang, "all_submitted", total=total), reply_markup=kb.admin_menu(lang)
         )
         return
     lines = "\n".join(
-        f"{i}. {esc(m['full_name'])} — <i>{esc(m['position']) or '—'}</i>"
+        f"{i}. {esc(m['full_name'])} — <i>{shifts.get_schedule_badge(m['tabel'], day, lang)}</i>"
         + (f" (@{esc(m['username'])})" if m["username"] else "")
         for i, m in enumerate(missing, start=1)
     )
@@ -125,6 +129,25 @@ async def missing_today(message: Message, lang: str) -> None:
         ),
         reply_markup=kb.admin_menu(lang),
     )
+
+
+@router.message(Btn("btn_shifts"))
+@router.message(Command("smena", "shifts", "grafik"))
+async def shifts_schedule(message: Message, lang: str) -> None:
+    day = today()
+    parts = [
+        shifts.format_daily_schedule(day, lang),
+        "\n" + ("─" * 28) + "\n",
+        ("📋 <b>Keyingi 4 kunlik navbatchilik:</b>" if lang == "uz" else "📋 <b>График на следующие 4 дня:</b>"),
+    ]
+    for offset in range(1, 5):
+        next_d = day + timedelta(days=offset)
+        ds, ns = shifts.get_shifts_for_date(next_d)
+        wd = ["Du", "Se", "Chor", "Pay", "Jum", "Shan", "Yak"][next_d.weekday()] if lang == "uz" else ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"][next_d.weekday()]
+        parts.append(
+            f"• <b>{next_d.strftime('%d.%m')} ({wd})</b>: ☀️ {ds}-smena | 🌙 {ns}-smena"
+        )
+    await message.answer("\n".join(parts), reply_markup=kb.admin_menu(lang))
 
 
 @router.message(Btn("btn_stats"))

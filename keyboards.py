@@ -53,9 +53,12 @@ def admin_menu(lang: str) -> ReplyKeyboardMarkup:
             [KeyboardButton(text=t(lang, "btn_excel")), KeyboardButton(text=t(lang, "btn_word"))],
             [
                 KeyboardButton(text=t(lang, "btn_employees")),
-                KeyboardButton(text=t(lang, "btn_stats")),
+                KeyboardButton(text=t(lang, "btn_shifts")),
             ],
-            [KeyboardButton(text=t(lang, "btn_broadcast"))],
+            [
+                KeyboardButton(text=t(lang, "btn_stats")),
+                KeyboardButton(text=t(lang, "btn_broadcast")),
+            ],
             [KeyboardButton(text=t(lang, "btn_lang")), KeyboardButton(text=t(lang, "btn_help"))],
         ],
         resize_keyboard=True,

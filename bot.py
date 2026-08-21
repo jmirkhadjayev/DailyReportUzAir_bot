@@ -68,11 +68,13 @@ COMMANDS = {
 
 ADMIN_EXTRA = {
     "uz": [
+        ("smena", "Smena grafigi va ish vaqtlari"),
         ("excel", "Excel faylni yuklab olish"),
         ("word", "Word faylni yuklab olish"),
         ("hodimlar", "Hodimlar ro'yxati"),
     ],
     "ru": [
+        ("smena", "График смен и рабочее время"),
         ("excel", "Скачать файл Excel"),
         ("word", "Скачать файл Word"),
         ("hodimlar", "Список сотрудников"),
